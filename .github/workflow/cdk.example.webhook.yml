@@ -1,0 +1,81 @@
+name: CDK for example-github-actions-webhook
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'cdk/example-github-actions-webhook/**'
+  push:
+    branches:
+      - master
+    paths:
+      - 'cdk/example-github-actions-webhook/**'
+
+jobs:
+  CDK-EXAMPLE-WEBHOOK:
+    name: Build, test and deploy CDK code
+    runs-on: ubuntu-latest
+    env:
+      image_name: registry.example.cloud/master/aws-cdk
+      working_directory: ./cdk/example-github-actions-webhook
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2.1.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14'
+
+      # - name: Setup dependencies
+      #   run: npm ci && npm install
+      #   working-directory: ${{ env.working_directory }}
+
+      # - name: Build
+      #   run: npm run build
+      #   working-directory: ${{ env.working_directory }}
+ 
+      # - name: Unit tests
+      #   if: contains(github.event_name, 'pull_request')
+      #   run: npm run test
+      #   working-directory: ${{ env.working_directory }}
+
+      - name: CDK Diff Check
+        if: contains(github.event_name, 'pull_request')
+        run: npm run cdk:diff
+        env:
+          API_KEY: ${{ secrets.CDK_EXAMPLE_WEBHOOK_API_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_PERSONAL_TOKEN }}
+        working-directory: ${{ env.working_directory }}
+
+      # - name: CDK Synth
+      #   if: contains(github.event_name, 'pull_request')
+      #   # run: npm run cdk:synth
+      #   uses: youyo/aws-cdk-github-actions@v2
+      #   with:
+      #     cdk_subcommand: 'synth'
+      #     cdk_version: '1.19.0'
+      #     working_dir: ${{ env.working_directory }}
+      #   env:
+      #     API_KEY: ${{ secrets.CDK_EXAMPLE_WEBHOOK_API_KEY }}
+      #     AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_PERSONAL_TOKEN }}
+      #   # working-directory: ${{ env.working_directory }}
+
+      # - name: CDK Deploy
+      #   if: contains(github.event_name, 'push')
+      #   run: npm run cdk:deploy
+      #   env:
+      #     API_KEY: ${{ secrets.CDK_EXAMPLE_WEBHOOK_API_KEY }}
+      #     AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_PERSONAL_TOKEN }}
+      #   working-directory: ${{ env.working_directory }}
